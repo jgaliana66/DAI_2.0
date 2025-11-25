@@ -1,0 +1,71 @@
+{
+  "id": "J2C-TEST-Defects-v1",
+  "name": "J2C-TEST-Defects-v1",
+  "agents": [
+    {
+      "id": "TEST-Orchestrator-v1",
+      "name": "TEST-Orchestrator",
+      "goals": "# Orchestrator de Prueba - CON DEFECTOS INTENCIONALES\n\n## Entry Guard\n\n**DEFECTO 1: Entry Guard contradictorio**\n\nSI control.active_agent == \"TEST-Orchestrator\":\n  → Activarse\n\nPERO TAMBIÉN:\n\nSI control.active_agent != \"TEST-Orchestrator\":\n  → Activarse también (CONTRADICCIÓN)\n\n---\n\n## Primera Respuesta\n\n**DEFECTO 2: Lógica duplicada**\n\n### Paso 1: Detectar tipo de entrada\n\nA) Usuario nuevo:\n1. Inicializar STATE_JSON\n2. Activar agente de bienvenida\n\nB) Usuario nuevo (DUPLICADO):\n1. Inicializar STATE_JSON (otra vez)\n2. Activar agente de bienvenida (otra vez)\n\n---\n\n## Coordinación\n\n**DEFECTO 3: Mapeo inconsistente**\n\n| Fase | Agente | Flag |\n|------|--------|------|\n| Motivaciones | TEST-Migration | covered.Motivaciones |\n| Motivaciones | TEST-Drivers | covered.Motivaciones |\n\n**Dos agentes para la misma fase (ambigüedad)**\n\n---\n\n## Reglas de Coordinación\n\n### Entry Guard Global\n\n**DEFECTO 4: Sin Entry Guard (ausente)**\n\nProcesar todo sin verificar active_agent.\n\n### Solo Orchestrator puede\n\n**DEFECTO 5: Responsabilidades ambiguas**\n\n- ✅ Escribir covered.*=true\n- ❌ Pero otros agentes también pueden hacerlo según sección X\n\n---\n\n## Protocolo de Activación\n\n**DEFECTO 6: Salto automático sin confirmación**\n\nSi heurística cumplida:\n- Marcar covered=true\n- Avanzar fase automáticamente\n- NO preguntar al usuario\n\n---\n\n## Heurísticas\n\n**DEFECTO 7: Criterios contradictorios**\n\n- Motivaciones: ≥2 dominios\n- Motivaciones: ≥3 dominios (en otra sección)\n- Motivaciones: Al menos 1 (en tercera sección)\n\n---\n\n## DEFECTO 8: Exit Strategy ausente\n\n(No hay protocolo de salida definido)\n\n---\n\n## DEFECTO 9: State JSON inconsistente\n\nEjemplo STATE_JSON:\n```json\n{\n  \"session_id\": \"xxx\",\n  \"active_agent\": \"TEST-Orchestrator\"\n}\n```\n\nEjemplo STATE_JSON (otra sección):\n```json\n{\n  \"meta\": {\"session_id\": \"xxx\"},\n  \"control\": {\"active_agent\": \"TEST-Orchestrator\"},\n  \"ada\": {\"phase\": \"Motivaciones\"}\n}\n```\n\n**Estructura inconsistente**\n\n---\n\n## Loop Contract\n\n**DEFECTO 10: Sin loop contract definido**\n\n(Falta definición de iteración continua)\n",
+      "model": "GPT-4.1",
+      "tools": [],
+      "description": "Orchestrator con defectos intencionales para testing de APS v3.5",
+      "mcp_servers": [],
+      "max_tools_calls": "5"
+    },
+    {
+      "id": "TEST-Migration-v1",
+      "name": "TEST-Migration",
+      "goals": "# Migration Agent - CON DEFECTOS\n\n## DEFECTO 11: Entry Guard ausente completamente\n\n(No hay Entry Guard definido)\n\n---\n\n## Rol\n\nCapturar motivaciones de migración.\n\n---\n\n## Instrucciones\n\n**DEFECTO 12: Salto automático por heurística**\n\n1. Preguntar motivaciones\n2. Si ≥2 motivaciones capturadas:\n   - Marcar covered.Motivaciones=true\n   - Cambiar ada.phase=\"Stakeholders\"\n   - Activar siguiente agente\n   - TODO SIN PREGUNTAR AL USUARIO\n\n---\n\n## DEFECTO 13: Modifica covered.* (violación MVC)**\n\n```python\nif len(motivaciones) >= 2:\n    STATE_JSON.covered.Motivaciones = True  # ❌ PROHIBIDO\n```\n\n---\n\n## Salida\n\n**DEFECTO 14: OUTPUT sin STATE_JSON**\n\n1. RESUMEN\n2. OUTPUT (falta STATE_JSON obligatorio)\n\n---\n\n## DEFECTO 15: Loop Contract ausente\n\n(No define cómo iterar con usuario)\n\n---\n\n## DEFECTO 16: Protocolo de confirmación ambiguo\n\nDetecta \"listo\" O \"continuar\" O automáticamente si heurística cumplida.\n\n**Contradicción: ¿manual o automático?**\n\n---\n\n## State JSON\n\n**DEFECTO 17: Incluye datos de proyecto**\n\n```json\n{\n  \"meta\": {\"session_id\": \"xxx\"},\n  \"ada\": {\"phase\": \"Motivaciones\"},\n  \"motivaciones\": [\n    {\"tipo\": \"estratégica\", \"descripcion\": \"...\"}\n  ]\n}\n```\n\n**STATE_JSON debe ser solo control, no datos**\n\n---\n\n## DEFECTO 18: Exit Strategy contradictoria\n\nSalida:\n- Si confirmado → devolver control a Orchestrator\n- Si heurística cumplida → avanzar automáticamente\n\n**¿Cuál prevalece?**\n",
+      "model": "GPT-4.1",
+      "tools": [],
+      "description": "Agente de migración con múltiples defectos para testing",
+      "mcp_servers": [],
+      "max_tools_calls": "5"
+    },
+    {
+      "id": "TEST-Stakeholder-v1",
+      "name": "TEST-Stakeholder",
+      "goals": "# Stakeholder Agent - DEFECTOS ADICIONALES\n\n## Entry Guard\n\n**DEFECTO 19: Entry Guard parcial**\n\nSi active_agent == \"TEST-Stakeholder\":\n  → Procesar\n\n(Falta verificar qué hacer si NO es el activo)\n\n---\n\n## DEFECTO 20: Fase previa no verificada\n\nComenzar captura de stakeholders sin verificar:\n- ¿covered.Motivaciones == true?\n\n---\n\n## Instrucciones\n\n**DEFECTO 21: Heurística contradictoria con Orchestrator**\n\nOrchestrator dice: ≥4 stakeholders\nEste agente dice: ≥3 stakeholders\n\n**Inconsistencia**\n\n---\n\n## DEFECTO 22: Deny-terms ausentes\n\n(No define antipatrones a detectar)\n\n---\n\n## Protocolo de Salida\n\n**DEFECTO 23: Estructura duplicada**\n\n## 1. RESUMEN\n2. STATE_JSON\n3. OUTPUT\n\nY luego otra vez:\n\n## PROTOCOLO DE SALIDA\n\n1. RESUMEN (duplicado)\n2. STATE_JSON (duplicado)\n3. OUTPUT (duplicado)\n\n---\n\n## DEFECTO 24: Loop sin condición de salida\n\n```\nWHILE True:\n    Capturar stakeholders\n    (nunca termina)\n```\n\n---\n\n## State JSON\n\n**DEFECTO 25: Campo inventado**\n\n```json\n{\n  \"custom_field_not_in_schema\": \"valor\"\n}\n```\n\n---\n\n## DEFECTO 26: Exit Strategy ausente\n\n(No define cómo devolver control)\n",
+      "model": "GPT-4.1",
+      "tools": [],
+      "description": "Agente stakeholder con defectos de validación",
+      "mcp_servers": [],
+      "max_tools_calls": "5"
+    },
+    {
+      "id": "TEST-ASIS-v1",
+      "name": "TEST-ASIS",
+      "goals": "# ASIS Agent - DEFECTOS CRÍTICOS\n\n## DEFECTO 27: Entry Guard que permite preempción\n\nSi ada.status == \"in_progress\" Y active_agent != \"TEST-ASIS\":\n  → Tomar control de todos modos\n\n**Viola anti-preempción**\n\n---\n\n## DEFECTO 28: Múltiples Entry Guards contradictorios\n\n### Entry Guard 1\nSI active_agent == \"TEST-ASIS\" → Activarse\n\n### Entry Guard 2\nSI active_agent != \"TEST-ASIS\" → Silencio\n\n### Entry Guard 3\nSIEMPRE activarse sin importar active_agent\n\n**Tres guards que se contradicen**\n\n---\n\n## DEFECTO 29: Avanza fase sin autorización\n\n```python\nada.phase = \"Riesgos\"  # Cambia fase directamente\n```\n\n**Solo Orchestrator puede cambiar ada.phase**\n\n---\n\n## DEFECTO 30: Activa otros agentes directamente\n\n```python\ncontrol.active_agent = \"TEST-Risks\"\n# Activa siguiente sin devolver a Orchestrator\n```\n\n---\n\n## Protocolo de Salida\n\n**DEFECTO 31: No fusiona STATE_JSON**\n\nGenera STATE_JSON nuevo ignorando el recibido.\n\n---\n\n## DEFECTO 32: Estado de confirmación duplicado\n\n```json\n{\n  \"ada\": {\n    \"status\": \"ready_to_confirm\",\n    \"status\": \"in_progress\"\n  }\n}\n```\n\n**Campo duplicado con valores contradictorios**\n\n---\n\n## DEFECTO 33: Loop Contract sin detección de intención\n\nProcesa entrada sin distinguir:\n- ¿Usuario confirma?\n- ¿Usuario añade datos?\n- ¿Usuario pide sugerencias?\n\n---\n\n## DEFECTO 34: Heurística sin evaluar\n\nNunca verifica si cumple P3 (heurística mínima).\n\n---\n\n## DEFECTO 35: Exit Strategy que no devuelve control\n\nAl terminar:\n- Genera OUTPUT\n- Termina\n- NO cambia active_agent a Orchestrator\n\n**Orchestrator queda esperando**\n",
+      "model": "GPT-4.1",
+      "tools": [],
+      "description": "Agente ASIS con defectos críticos de control de flujo",
+      "mcp_servers": [],
+      "max_tools_calls": "5"
+    },
+    {
+      "id": "TEST-Helper-v1",
+      "name": "TEST-Helper",
+      "goals": "# Helper Agent - DEFECTOS DE ARQUITECTURA\n\n## DEFECTO 36: Helper que modifica estado\n\n**Los helpers NO deben modificar covered.* ni ada.phase**\n\nPero este lo hace:\n```python\ncovered.ASIS = True  # ❌ PROHIBIDO para helpers\n```\n\n---\n\n## DEFECTO 37: Sin Entry Guard\n\n(Helpers también necesitan Entry Guard)\n\n---\n\n## DEFECTO 38: Activa INPUT agents\n\n```python\ncontrol.active_agent = \"TEST-Migration\"\n```\n\n**Solo Orchestrator puede activar INPUT agents**\n\n---\n\n## DEFECTO 39: Genera reporte sin datos completos\n\nGenera informe cuando:\n- Solo 2 de 6 fases tienen covered=true\n\n---\n\n## DEFECTO 40: Loop infinito sin escape\n\n```python\nwhile not all_phases_complete():\n    wait()\n    # Nunca verifica timeout\n```\n\n---\n\n## DEFECTO 41: State JSON con estructura custom\n\n```json\n{\n  \"my_custom_structure\": {\n    \"this_is_not_standard\": true\n  }\n}\n```\n\n---\n\n## DEFECTO 42: Exit Strategy ausente\n\n(No define cómo terminar)\n",
+      "model": "GPT-4.1",
+      "tools": [],
+      "description": "Helper con violaciones de arquitectura",
+      "mcp_servers": [],
+      "max_tools_calls": "10"
+    },
+    {
+      "id": "TEST-Greeter-v1",
+      "name": "TEST-Greeter",
+      "goals": "# Greeter - DEFECTOS ESPECÍFICOS\n\n## DEFECTO 43: Greeter sin exención de Entry Guard\n\n**Greeter debe estar exento de Entry Guard requirement**\n\nPero el linter lo marca como error.\n\n---\n\n## DEFECTO 44: Greeter que no devuelve control\n\nAl terminar bienvenida:\n- Muestra mensaje\n- Termina\n- NO establece control.greeter_completed=true\n- NO devuelve a Orchestrator\n\n---\n\n## DEFECTO 45: State JSON sin meta completo\n\n```json\n{\n  \"session_id\": \"xxx\"\n}\n```\n\n**Falta meta.updated_by, meta.ts, meta.state_version**\n\n---\n\n## DEFECTO 46: Loop sin menú de opciones\n\nItera pero nunca ofrece:\n- Añadir más\n- Confirmar\n- Sugerencias\n\n---\n\n## DEFECTO 47: Bloque duplicado exacto\n\n## Bienvenida\n\nMensaje de bienvenida 1.\n\n## Bienvenida\n\nMensaje de bienvenida 2 (mismo nombre).\n\n---\n\n## DEFECTO 48: Exit Strategy contradictoria\n\nSalida 1: Devolver a Orchestrator\nSalida 2: Activar Migration directamente\n\n**¿Cuál usar?**\n",
+      "model": "GPT-4.1",
+      "tools": [],
+      "description": "Greeter con defectos de inicialización",
+      "mcp_servers": [],
+      "max_tools_calls": "5"
+    }
+  ],
+  "swarm_type": "Test",
+  "description": "SWARM de prueba con 48 defectos intencionales para validar metodología APS v3.5: duplicados, contradicciones, entry guards faltantes, exit strategies ausentes, violaciones MVC, loops sin contrato, state JSON inconsistente, heurísticas contradictorias, responsabilidades ambiguas, y más",
+  "swarm_custom_instruction": "",
+  "max_num_call_agents_by_conv": "25",
+  "max_num_msg_by_conversation": "25"
+}

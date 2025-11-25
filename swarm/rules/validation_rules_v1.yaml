@@ -1,0 +1,311 @@
+# ════════════════════════════════════════════════════════════════════════════
+# APS v3.5 - Reglas de Validación Semántica Genéricas
+# ════════════════════════════════════════════════════════════════════════════
+# 
+# Este archivo define las reglas de validación que yaml_lint_v4.py aplicará
+# a cualquier SWARM que siga la metodología APS v3.5.
+#
+# Estructura:
+#   - patterns: Expresiones regulares a buscar
+#   - validators: Lógica de validación por tipo de bloque
+#   - roles: Permisos por rol de agente
+#   - custom: Reglas específicas del dominio (opcional)
+# ════════════════════════════════════════════════════════════════════════════
+
+version: "1.0"
+metadata:
+  description: "Reglas de validación semántica para SWARMs APS v3.5"
+  domain: "generic"  # generic | j2c | custom
+  author: "APS v3.5 Validation Team"
+  last_updated: "2025-11-19"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 1: PATRONES SOSPECHOSOS GENÉRICOS
+# ═══════════════════════════════════════════════════════════════════════════
+
+suspicious_patterns:
+  # Patrones que indican Entry Guards defectuosos
+  entry_guard:
+    always_active:
+      - pattern: "SIEMPRE\\s+activarse"
+        severity: error
+        message: "Entry Guard configurado para activarse siempre (rompe flujo orquestado)"
+      - pattern: "sin\\s+importar\\s+(active_agent|control)"
+        severity: error
+        message: "Entry Guard ignora mecanismo de control"
+    
+    missing_logic:
+      - pattern: "\\(No\\s+hay\\s+Entry\\s+Guard"
+        severity: error
+        message: "Entry Guard lógicamente ausente"
+      - pattern: "Entry\\s+Guard\\s+ausente"
+        severity: error
+        message: "Entry Guard marcado como ausente"
+      - pattern: "DEFECTO.*ausente"
+        severity: warning
+        message: "Bloque marcado como defecto de prueba"
+    
+    incomplete:
+      - pattern: "falta\\s+rama\\s+else"
+        severity: warning
+        message: "Entry Guard incompleto (lógica parcial)"
+
+  # Patrones que indican Exit Strategies defectuosas
+  exit_strategy:
+    no_return_control:
+      - pattern: "NO\\s+devuelve.*control"
+        severity: error
+        message: "Exit Strategy no devuelve control al Orchestrator"
+      - pattern: "Orchestrator\\s+queda\\s+esperando"
+        severity: error
+        message: "Exit Strategy deja al Orchestrator bloqueado"
+    
+    contradictory:
+      - pattern: "contradictoria"
+        severity: warning
+        message: "Exit Strategy con comportamiento contradictorio"
+      - pattern: "múltiples\\s+salidas\\s+incompatibles"
+        severity: warning
+        message: "Exit Strategy define salidas contradictorias"
+
+  # Patrones que indican Loop Contracts defectuosos
+  loop_contract:
+    infinite_loop:
+      - pattern: "while\\s+True(?!\\s*:.*break)"
+        severity: error
+        message: "Loop infinito sin mecanismo de escape"
+      - pattern: "nunca\\s+termina"
+        severity: error
+        message: "Loop sin condición de salida"
+      - pattern: "sin.*condición.*salida"
+        severity: warning
+        message: "Loop Contract sin exit condition clara"
+    
+    missing_intent_detection:
+      - pattern: "sin.*detectar.*intención"
+        severity: warning
+        message: "Loop Contract no detecta intención de salida"
+
+  # Patrones que indican STATE_JSON problemático
+  state_json:
+    forbidden_content:
+      - pattern: "\"(motivaciones|stakeholders|asis|riesgos|gaps|requisitos)\""
+        severity: error
+        message: "STATE_JSON contiene datos de proyecto (prohibido - solo control)"
+    
+    custom_structure:
+      - pattern: "custom_(field|structure|data)"
+        severity: warning
+        message: "STATE_JSON usa estructura no estándar"
+      - pattern: "my_"
+        severity: warning
+        message: "STATE_JSON incluye campos custom no documentados"
+
+  # Patrones que indican violaciones MVC
+  mvc_violations:
+    modify_covered:
+      - pattern: "covered\\.\\w+\\s*=\\s*True"
+        severity: error
+        message: "Modificación de covered.* (solo Orchestrator autorizado)"
+    
+    change_phase:
+      - pattern: "ada\\.phase\\s*="
+        severity: error
+        message: "Cambio de ada.phase (solo Orchestrator autorizado)"
+    
+    direct_activation:
+      - pattern: "control\\.active_agent\\s*=\\s*[\"'][^O]"
+        severity: error
+        message: "Activación directa de agente sin pasar por Orchestrator"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 2: KEYWORDS REQUERIDOS POR TIPO DE BLOQUE
+# ═══════════════════════════════════════════════════════════════════════════
+
+required_keywords:
+  entry_guard:
+    must_contain_any:
+      - "active_agent"
+      - "control\\.active_agent"
+      - "control\\[.active_agent.\\]"
+    message: "Entry Guard debe verificar 'active_agent' para decidir activación"
+    severity: error
+
+  exit_strategy:
+    must_contain_any:
+      - "Orchestrator"
+      - "devolver.*control"
+      - "handoff"
+      - "control\\.active_agent.*Orchestrator"
+    message: "Exit Strategy debe devolver control explícitamente al Orchestrator"
+    severity: error
+
+  loop_contract:
+    must_contain_any:
+      - "confirmar"
+      - "continuar"
+      - "listo"
+      - "terminar"
+      - "salir"
+      - "exit"
+    message: "Loop Contract debe tener mecanismo de confirmación/salida"
+    severity: warning
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 3: PERMISOS POR ROL DE AGENTE
+# ═══════════════════════════════════════════════════════════════════════════
+
+role_permissions:
+  ORCHESTRATOR:
+    can_modify:
+      - "covered\\..*"
+      - "ada\\.phase"
+      - "control\\.active_agent"
+    can_activate_agents: true
+    requires_entry_guard: false  # Orchestrator no necesita Entry Guard
+  
+  INPUT:
+    can_modify:
+      - "ada\\.status"
+      - "meta\\..*"
+    cannot_modify:
+      - "covered\\..*"
+      - "ada\\.phase"
+      - "control\\.active_agent"
+    can_activate_agents: false
+    requires_entry_guard: true
+  
+  HELPER:
+    can_modify:
+      - "meta\\..*"
+    cannot_modify:
+      - "covered\\..*"
+      - "ada\\.phase"
+      - "ada\\.status"
+      - "control\\.active_agent"
+    can_activate_agents: false
+    requires_entry_guard: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 4: VALIDACIONES ESTRUCTURALES
+# ═══════════════════════════════════════════════════════════════════════════
+
+structural_requirements:
+  mandatory_blocks:
+    - name: "Entry Guard"
+      aliases:
+        - "Entry Guard"
+        - "Condiciones de Entrada"
+        - "Guardia de Entrada"
+      applies_to_roles: ["INPUT", "HELPER"]
+      severity: error
+    
+    - name: "Exit Strategy"
+      aliases:
+        - "Exit Strategy"
+        - "Estrategia de Salida"
+        - "Salida"
+      applies_to_roles: ["ORCHESTRATOR", "INPUT", "HELPER"]
+      severity: error
+    
+    - name: "State JSON"
+      aliases:
+        - "State JSON"
+        - "STATE_JSON"
+        - "Estado"
+      applies_to_roles: ["ORCHESTRATOR", "INPUT", "HELPER"]
+      severity: error
+    
+    - name: "Loop Contract"
+      aliases:
+        - "Loop Contract"
+        - "Contrato de Iteración"
+        - "Bucle"
+      applies_to_roles: ["ORCHESTRATOR", "INPUT"]
+      severity: warning
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 5: VALIDACIONES SEMÁNTICAS AVANZADAS
+# ═══════════════════════════════════════════════════════════════════════════
+
+semantic_validators:
+  # Detectar duplicados semánticos (contenido similar, no solo nombres)
+  duplicate_detection:
+    enabled: true
+    similarity_threshold: 0.70  # 70% de palabras comunes
+    ignore_short_blocks: 50  # Ignorar bloques <50 caracteres
+    severity: warning
+  
+  # Validar coherencia de STATE_JSON
+  state_json_schema:
+    enabled: true
+    required_top_level_keys:
+      - "meta"
+      - "ada"
+      - "control"
+    forbidden_keys:
+      - "motivaciones"
+      - "stakeholders"
+      - "asis"
+      - "riesgos"
+      - "gaps"
+      - "requisitos"
+      - "proyecto"
+    severity: error
+  
+  # Validar que bloques de código Python no tienen errores sintácticos
+  python_code_validation:
+    enabled: false  # Opcional - puede ser costoso
+    severity: warning
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 6: REGLAS CUSTOM (Específicas del dominio)
+# ═══════════════════════════════════════════════════════════════════════════
+
+custom_rules:
+  # Estas reglas son específicas del dominio J2C (migración Java→Cloud)
+  # Para otros SWARMs, modificar o eliminar esta sección
+  
+  j2c_specific:
+    enabled: false  # Desactivar para SWARMs genéricos
+    rules:
+      forbidden_phase_names:
+        patterns:
+          - "fase_inventada"
+          - "custom_phase"
+        message: "Nombre de fase no reconocido en metodología J2C"
+        severity: warning
+      
+      required_heuristics:
+        - name: "≥N stakeholders"
+          pattern: "≥\\s*\\d+\\s+stakeholders"
+          message: "Heurística de stakeholders debe estar definida"
+          severity: warning
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECCIÓN 7: CONFIGURACIÓN DE REPORTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+reporting:
+  # Niveles de severidad y su comportamiento
+  severity_levels:
+    error:
+      exit_code: 1  # Falla la validación
+      symbol: "❌"
+      color: "red"
+    
+    warning:
+      exit_code: 0  # No falla, pero reporta
+      symbol: "⚠️"
+      color: "yellow"
+    
+    info:
+      exit_code: 0
+      symbol: "ℹ️"
+      color: "blue"
+  
+  # Formato de salida
+  output_format: "detailed"  # detailed | summary | json
+  
+  # Agrupación de issues
+  group_by: "severity"  # severity | block | category

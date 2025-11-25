@@ -1,0 +1,360 @@
+# SID Vocabulary v1.0 - APS v3.5
+# Vocabulario canónico de identificadores semánticos para Agent Prompt Specification
+
+version: "1.0"
+aps_version: "3.5"
+schema_version: "1.0"
+description: "Vocabulario oficial de términos permitidos para SIDs en APS v3.5"
+last_updated: "2025-11-19"
+
+# =============================================================================
+# ACCIONES
+# =============================================================================
+# Verbos que describen la operación principal del bloque
+
+acciones:
+  permitidas:
+    # Verificación y validación
+    - verificar
+    - validar
+    - comprobar
+    - evaluar
+    - revisar
+    - inspeccionar
+    
+    # Captura y extracción
+    - capturar
+    - extraer
+    - obtener
+    - recopilar
+    - detectar
+    - identificar
+    
+    # Generación y creación
+    - generar
+    - crear
+    - construir
+    - producir
+    - renderizar
+    - formatear
+    
+    # Transformación
+    - transformar
+    - convertir
+    - procesar
+    - parsear
+    - normalizar
+    - enriquecer
+    
+    # Control y gestión
+    - delegar
+    - transferir
+    - confirmar
+    - bloquear
+    - permitir
+    - restringir
+    
+    # Prohibición y prevención
+    - prohibir
+    - prevenir
+    - evitar
+    - denegar
+    
+    # Comunicación
+    - informar
+    - notificar
+    - reportar
+    - comunicar
+    - avisar
+    
+    # Almacenamiento y persistencia
+    - guardar
+    - almacenar
+    - persistir
+    - actualizar
+    
+    # Análisis y decisión
+    - analizar
+    - decidir
+    - clasificar
+    - categorizar
+    - priorizar
+    
+  deprecated: []
+    # Ejemplo futuro:
+    # - calcular  # Usar 'evaluar' en su lugar (deprecated desde v1.1)
+
+# =============================================================================
+# RELACIONES
+# =============================================================================
+# Describen la relación semántica del bloque con otros componentes del sistema
+
+relaciones:
+  permitidas:
+    # Control de agentes
+    - control.active_agent
+    - control.estado
+    - control.contexto
+    - control.flujo
+    
+    # Interacción con usuario
+    - usuario.confirmacion
+    - usuario.input
+    - usuario.feedback
+    - usuario.autorizacion
+    
+    # Estado y persistencia
+    - state_json
+    - state.actualizacion
+    - state.validacion
+    - state.persistencia
+    
+    # Handoff y delegación
+    - handoff.confirm
+    - handoff.target
+    - handoff.condicion
+    - handoff.automatico  # Usado en antipatrones para prohibir
+    
+    # Recursión y bucles
+    - recursion.limit
+    - recursion.directa
+    - loop.prevention
+    - loop.contract
+    
+    # Datos y contenido
+    - datos.input
+    - datos.output
+    - datos.validacion
+    - datos.transformacion
+    
+    # Motivación (específico J2C)
+    - usuario.motivacion
+    - migracion.drivers
+    - proyecto.objetivos
+    
+    # Documentación y metadata
+    - metadata.descripcion
+    - metadata.ejemplos
+    - metadata.restricciones
+    
+  deprecated: []
+
+# =============================================================================
+# NIVELES
+# =============================================================================
+# Indican la capa arquitectónica o nivel de abstracción del bloque
+
+niveles:
+  permitidas:
+    # Capas principales
+    - guard          # Entry guards, verificaciones de entrada
+    - workflow       # Lógica de flujo principal
+    - protocol       # Protocolos de comunicación (STATE_JSON, handoff)
+    - template       # Plantillas de salida
+    - policy         # Políticas y restricciones globales
+    - constraint     # Restricciones específicas
+    - heuristic      # Heurísticas de decisión
+    
+    # Subcategorías
+    - validation     # Validaciones específicas
+    - security       # Seguridad y autorizaciones
+    - configuration  # Configuración y parámetros
+    - metadata       # Información descriptiva
+    - example        # Ejemplos y casos de uso
+    - antipattern    # Antipatrones (para documentación de lo prohibido)
+    
+  deprecated: []
+
+# =============================================================================
+# TIPOS DE BLOQUE (block_type)
+# =============================================================================
+# Categorías principales de bloques en agentes APS
+
+block_types:
+  - id: BLK
+    name: "Block"
+    description: "Bloque genérico o estructural"
+    
+  - id: GOAL
+    name: "Goal"
+    description: "Objetivo o meta del agente"
+    
+  - id: POL
+    name: "Policy"
+    description: "Política o regla de negocio"
+    
+  - id: OUT
+    name: "Output"
+    description: "Especificación de salida"
+    
+  - id: CST
+    name: "Constraint"
+    description: "Restricción técnica o de negocio"
+    
+  - id: HEU
+    name: "Heuristic"
+    description: "Heurística de decisión"
+    
+  - id: PROT
+    name: "Protocol"
+    description: "Protocolo de comunicación o handoff"
+    
+  - id: INP
+    name: "Input"
+    description: "Especificación de entrada"
+
+# =============================================================================
+# NIVELES DE CONFIANZA
+# =============================================================================
+# Clasificación de confianza en inferencias semánticas
+
+confidence_levels:
+  HIGH:
+    description: "Match exacto en vocabulario canónico"
+    criteria:
+      - "Término encontrado literalmente en lista permitidas"
+      - "Combinación conocida y validada"
+    action: "Aceptar automáticamente"
+    
+  MEDIUM:
+    description: "Sinónimo reconocido o patrón heurístico"
+    criteria:
+      - "Sinónimo en diccionario de equivalencias"
+      - "Patrón heurístico con alta probabilidad"
+      - "Contexto claramente identificado"
+    action: "Aceptar con metadata de inferencia"
+    
+  LOW:
+    description: "Inferencia semántica sin match directo"
+    criteria:
+      - "No hay match en vocabulario"
+      - "Inferencia por similitud semántica"
+      - "Término nuevo o poco común"
+    action: "Generar WARNING, requiere revisión humana"
+
+# =============================================================================
+# POLÍTICA DE EVOLUCIÓN
+# =============================================================================
+
+politica_evolucion:
+  agregar_termino:
+    procedimiento:
+      - "1. Crear issue en GitHub con justificación semántica"
+      - "2. Documentar casos de uso y ejemplos"
+      - "3. Revisión por arquitecto APS"
+      - "4. Añadir a lista 'permitidas' con PR"
+      - "5. Actualizar CHANGELOG con nuevo término"
+      - "6. Bump de versión minor (1.0 → 1.1)"
+    
+    requiere:
+      - "Justificación semántica clara"
+      - "Al menos 2 casos de uso reales"
+      - "No conflicto con términos existentes"
+      - "Coherencia con filosofía APS"
+  
+  deprecar_termino:
+    procedimiento:
+      - "1. Mover término a lista 'deprecated'"
+      - "2. Añadir sugerencia de reemplazo"
+      - "3. Mantener durante 1 versión minor (advertencia)"
+      - "4. Eliminar en próxima versión major"
+    
+    metadata_requerida:
+      deprecated_since: "Versión en que se deprecó"
+      remove_in: "Versión en que se eliminará"
+      replacement: "Término recomendado en su lugar"
+  
+  versionado:
+    major_bump:
+      cuando:
+        - "Eliminación de términos deprecated"
+        - "Cambio incompatible en estructura SID"
+        - "Reorganización semántica profunda"
+      ejemplo: "1.x → 2.0"
+      
+    minor_bump:
+      cuando:
+        - "Añadir nuevos términos (compatible)"
+        - "Deprecar términos (mantenerlos temporalmente)"
+        - "Mejoras en documentación sin cambios funcionales"
+      ejemplo: "1.0 → 1.1"
+      
+    patch_bump:
+      cuando:
+        - "Correcciones de typos"
+        - "Aclaraciones en descripción"
+        - "Actualizaciones de metadata"
+      ejemplo: "1.0.0 → 1.0.1"
+
+# =============================================================================
+# EJEMPLOS DE USO
+# =============================================================================
+
+ejemplos:
+  sid_completo:
+    - "BLK.verificar.control.active_agent.guard"
+    - "GOAL.capturar.usuario.motivacion.workflow"
+    - "POL.prohibir.handoff.automatico.policy"
+    - "OUT.generar.state_json.template"
+    - "CST.restringir.recursion.limit.constraint"
+    - "HEU.evaluar.datos.validacion.heuristic"
+    - "PROT.confirmar.handoff.confirm.protocol"
+    - "INP.validar.datos.input.validation"
+  
+  inferencia_high:
+    sid: "BLK.verificar.control.active_agent.guard"
+    razon: "Todos los términos están literalmente en vocabulario"
+    confidence: "HIGH"
+    
+  inferencia_medium:
+    sid: "BLK.chequear.control.active_agent.guard"
+    razon: "'chequear' es sinónimo conocido de 'verificar'"
+    confidence: "MEDIUM"
+    inference_method: "synonym_mapping"
+    suggestion: "Usar 'verificar' para consistencia"
+    
+  inferencia_low:
+    sid: "BLK.monitorizar.control.active_agent.guard"
+    razon: "'monitorizar' no está en vocabulario, inferido por contexto"
+    confidence: "LOW"
+    inference_method: "semantic_similarity"
+    inference_note: "Revisar si 'verificar' o 'evaluar' es más apropiado"
+    action: "WARNING generado, requiere revisión humana"
+
+# =============================================================================
+# SINÓNIMOS RECONOCIDOS
+# =============================================================================
+# Mapeo de términos equivalentes aceptados (confianza MEDIUM)
+
+sinonimos:
+  acciones:
+    verificar: [chequear, comprobar, revisar]
+    capturar: [recoger, extraer, obtener]
+    generar: [crear, producir, construir]
+    prohibir: [denegar, bloquear, restringir]
+    informar: [notificar, comunicar, reportar]
+    
+  relaciones:
+    control.active_agent: [control.agente_actual, control.agente_activo]
+    usuario.confirmacion: [usuario.autorizacion, usuario.aprobacion]
+    
+  niveles:
+    guard: [entrada, verificacion_entrada]
+    workflow: [flujo, proceso]
+    policy: [politica, regla]
+
+# =============================================================================
+# CHANGELOG
+# =============================================================================
+
+changelog:
+  - version: "1.0"
+    date: "2025-11-19"
+    changes:
+      - "Versión inicial del vocabulario para APS v3.5"
+      - "35 acciones permitidas"
+      - "24 relaciones permitidas"
+      - "13 niveles permitidos"
+      - "Política de evolución definida"
+      - "Sistema de confianza HIGH/MEDIUM/LOW"
+      - "Mapeo de sinónimos para confianza MEDIUM"

@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "context": {
+    "include": [
+      "rules/aps_v35_mission.md"
+    ]
+  },
+  "priority": {
+    "rules/aps_v35_mission.md": "high"
+  }
+}

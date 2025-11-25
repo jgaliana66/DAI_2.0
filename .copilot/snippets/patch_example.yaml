@@ -1,0 +1,15 @@
+target: agent_id=input.asis@3.4
+ops:
+  - op: replace
+    path: sections.constraints[C_JSON].text
+    value: "Salida SOLO JSON válido con $schema y additionalProperties=false."
+  - op: add
+    path: sections.constraints
+    value:
+      id: C_STATE_JSON_HIDE_ALWAYS
+      sid: constraint:output:state_json:visibility
+      params: { effect: hide, condition: always }
+      text: "No muestres el State JSON por defecto."
+audit:
+  author: copilot
+  reason: "Endurecer formato y ocultar state JSON"

@@ -1,0 +1,337 @@
+# APS v3.5 - Fuente de Verdad Canónica
+# Este archivo define TODAS las reglas estructurales y semánticas del estándar APS v3.5
+# Los scripts (yaml_lint.py, md2yaml.py, etc.) deben leer de aquí, NO codificar reglas hardcoded
+
+version: "3.5"
+updated: "2025-11-19"
+
+# ============================================================================
+# BLOQUES OBLIGATORIOS
+# ============================================================================
+required_blocks:
+  - name: "Entry Guard"
+    description: "Validación de entrada (contexto, formato, scope)"
+    patterns:
+      - "(?i)entry.*guard"
+      - "(?i)validaci[oó]n.*entrada"
+      - "(?i)guard.*entrada"
+    block_types: ["BLK", "CONST"]
+    required_in: ["all"]  # Todos los agentes deben tenerlo
+    
+  - name: "State JSON"
+    description: "Protocolo de handoff estructurado"
+    patterns:
+      - "(?i)state.*json"
+      - "(?i)protocolo.*handoff"
+    block_types: ["BLK", "CONST"]
+    required_in: ["all"]
+    
+  - name: "Loop Contract"
+    description: "Política de recursión/delegación"
+    patterns:
+      - "(?i)loop.*contract"
+      - "(?i)pol[ií]tica.*recursi[oó]n"
+      - "(?i)delegaci[oó]n.*policy"
+    block_types: ["BLK", "CONST"]
+    required_in: ["agents_with_delegation"]  # Solo agentes que delegan
+    
+  - name: "Exit Strategy"
+    description: "Condiciones de terminación"
+    patterns:
+      - "(?i)exit.*strategy"
+      - "(?i)estrategia.*salida"
+      - "(?i)condiciones.*terminaci[oó]n"
+    block_types: ["BLK", "GOAL"]
+    required_in: ["all"]
+
+# ============================================================================
+# POLÍTICAS ANTI-PATRÓN (DENY_TERMS)
+# ============================================================================
+antipatterns:
+  NO_AUTO_HANDOFF:
+    description: "Prohibición de handoff automático sin confirmación"
+    patterns:
+      - "handoff.*autom[áa]tic"
+      - "delegar.*autom[áa]ticamente"
+      - "transferir.*sin.*confirmar"
+    severity: "ERROR"  # ERROR si es prescriptivo, WARNING si es negación
+    rationale: |
+      El handoff automático rompe la trazabilidad y puede generar loops infinitos.
+      Siempre debe haber confirmación explícita del usuario o validación de condiciones.
+    
+  NO_HEURISTIC_DEVOLUTION:
+    description: "Prohibición de devolver heurísticas como datos finales"
+    patterns:
+      - "cumpl[oí].*heur[ií]stica.*devuelv"
+      - "retorn.*inferencia.*como.*resultado"
+    severity: "ERROR"
+    rationale: |
+      Las heurísticas son internas. Solo se devuelven datos verificados o se solicita
+      más información al usuario.
+    
+  NO_REGEX_AS_TRUTH:
+    description: "Prohibición de confiar ciegamente en regex"
+    patterns:
+      - "regex.*es.*suficiente"
+      - "patron.*verifica.*todo"
+    severity: "WARNING"
+    rationale: |
+      Los regex son ayudas, no fuentes de verdad. Siempre validar semánticamente.
+    
+  NO_SILENT_ASSUMPTIONS:
+    description: "Prohibición de asumir contexto sin validar"
+    patterns:
+      - "asumi.*que.*usuario"
+      - "probablemente.*quiere"
+      - "inferir.*sin.*preguntar"
+    severity: "ERROR"
+    rationale: |
+      Si el contexto es ambiguo, PREGUNTAR. No inferir silenciosamente.
+
+# ============================================================================
+# CONTEXTO DE NEGACIÓN (para evitar falsos positivos)
+# ============================================================================
+negation_patterns:
+  description: "Patrones que indican que se está describiendo un antipatrón, no prescribiéndolo"
+  patterns:
+    - "NO\\s+(hacer|hacer|usar|permitir)"
+    - "NUNCA\\s+"
+    - "EVITAR\\s+"
+    - "❌"
+    - "\\[ANTIPATR[OÓ]N\\]"
+    - "\\[EXAMPLE\\]"
+    - "MAL\\s+USO"
+    - "INCORRECTO"
+    - "PROHIBIDO"
+  severity_downgrade: "WARNING"  # Bajar de ERROR a WARNING si hay negación
+
+# ============================================================================
+# TIPOS DE BLOQUE EXENTOS (no aplican DENY_TERMS)
+# ============================================================================
+exempt_block_types:
+  - "EXAMPLE"      # Ejemplos didácticos
+  - "ANTIPATTERN"  # Descripciones de malas prácticas
+  - "TEST"         # Casos de prueba
+
+# ============================================================================
+# VOCABULARIO SEMÁNTICO (SID generation)
+# ============================================================================
+vocabulary:
+  description: "Vocabulario canónico para generación de SIDs"
+  
+  # Acciones (verbos)
+  actions:
+    verificar:
+      confidence: HIGH
+      synonyms: ["comprobar", "validar", "chequear"]
+      inference_method: "vocabulary"
+      
+    detectar:
+      confidence: HIGH
+      synonyms: ["identificar", "reconocer", "encontrar"]
+      inference_method: "vocabulary"
+      
+    procesar:
+      confidence: HIGH
+      synonyms: ["ejecutar", "realizar", "efectuar"]
+      inference_method: "vocabulary"
+      
+    reportar:
+      confidence: HIGH
+      synonyms: ["informar", "comunicar", "notificar"]
+      inference_method: "vocabulary"
+      
+    delegar:
+      confidence: HIGH
+      synonyms: ["transferir", "derivar", "handoff"]
+      inference_method: "vocabulary"
+  
+  # Estados (sustantivos)
+  states:
+    contexto:
+      confidence: HIGH
+      synonyms: ["estado", "situación", "entorno"]
+      
+    resultado:
+      confidence: HIGH
+      synonyms: ["output", "salida", "respuesta"]
+      
+    error:
+      confidence: HIGH
+      synonyms: ["fallo", "excepción", "problema"]
+  
+  # Propósitos (calificadores)
+  purposes:
+    validacion:
+      confidence: HIGH
+      synonyms: ["verificación", "comprobación", "chequeo"]
+      
+    completitud:
+      confidence: HIGH
+      synonyms: ["suficiencia", "totalidad"]
+      
+    seguridad:
+      confidence: HIGH
+      synonyms: ["safety", "protección"]
+
+# ============================================================================
+# HEURÍSTICAS SEMÁNTICAS
+# ============================================================================
+heuristics:
+  description: "Patrones para inferir SIDs cuando no hay match exacto en vocabulario"
+  
+  patterns:
+    - pattern: "(?i)(verificar|validar|comprobar)\\s+(estado|contexto)"
+      inference: "verificar.estado"
+      confidence: MEDIUM
+      note: "Sinónimo reconocido de 'verificar'"
+      
+    - pattern: "(?i)(detectar|identificar)\\s+(error|problema|fallo)"
+      inference: "detectar.error"
+      confidence: MEDIUM
+      note: "Sinónimo reconocido de 'detectar'"
+      
+    - pattern: "(?i)(procesar|ejecutar)\\s+(tarea|acción)"
+      inference: "procesar.tarea"
+      confidence: MEDIUM
+      note: "Sinónimo reconocido de 'procesar'"
+  
+  confidence_thresholds:
+    HIGH: "Match exacto en vocabulario"
+    MEDIUM: "Match en heurística o sinónimo reconocido"
+    LOW: "Inferencia sin pattern match"
+
+# ============================================================================
+# VALIDACIONES ESTRUCTURALES
+# ============================================================================
+structural_validations:
+  duplicate_blocks:
+    enabled: true
+    severity: "WARNING"
+    auto_numbering: true  # md2yaml.py auto-numera duplicados
+    pattern: "^(.+)\\s+\\(\\d+\\)$"
+    
+  missing_sids:
+    enabled: true
+    severity: "ERROR"
+    
+  invalid_sid_format:
+    enabled: true
+    severity: "ERROR"
+    pattern: "^(BLK|INS|OUT|VAR|GOAL|CONST|REQ)\\.[a-z0-9_\\.]+$"
+    
+  empty_instructions:
+    enabled: true
+    severity: "WARNING"
+
+# ============================================================================
+# PROTOCOLO STATE_JSON
+# ============================================================================
+state_json_protocol:
+  description: "Protocolo de handoff estructurado entre agentes"
+  required_fields:
+    - "current_agent"
+    - "target_agent"
+    - "context"
+    - "user_confirmation"
+  
+  optional_fields:
+    - "metadata"
+    - "trace"
+    - "timestamp"
+  
+  validation:
+    user_confirmation_required: true
+    trace_required_for_debugging: true
+
+# ============================================================================
+# ENTRY GUARD PATTERN
+# ============================================================================
+entry_guard:
+  description: "Patrón de validación de entrada"
+  mandatory_checks:
+    - "Contexto suficiente"
+    - "Formato válido"
+    - "Scope permitido"
+  
+  actions_on_failure:
+    - "Solicitar información faltante"
+    - "Reportar error específico"
+    - "NO asumir valores por defecto"
+
+# ============================================================================
+# LOOP CONTRACT
+# ============================================================================
+loop_contract:
+  description: "Política de recursión y delegación"
+  rules:
+    max_delegation_depth: 3
+    require_user_confirmation: true
+    trace_delegation_chain: true
+    
+  antipatterns:
+    - "Handoff automático sin validación"
+    - "Loop infinito sin exit condition"
+    - "Delegación circular (A→B→A)"
+
+# ============================================================================
+# REPORTES Y SUGERENCIAS
+# ============================================================================
+reporting:
+  confidence_levels:
+    HIGH:
+      action: "Aceptar SID sin revisión"
+      
+    MEDIUM:
+      action: "Sugerir vocabulario canónico"
+      suggestions_count: 2
+      
+    LOW:
+      action: "Solicitar revisión manual"
+      suggestions_count: 3
+  
+  output_formats:
+    interactive:
+      emojis: true
+      colors: true
+      detailed_explanations: true
+      
+    ci_cd:
+      emojis: false
+      colors: false
+      format: "json"
+      exit_codes: true
+
+# ============================================================================
+# VERSIONADO Y COMPATIBILIDAD
+# ============================================================================
+compatibility:
+  backward_compatible_with:
+    - "3.4"
+    - "3.3"
+  
+  breaking_changes_from_v3_4:
+    - "Entry Guard ahora obligatorio"
+    - "STATE_JSON protocol formalizado"
+    - "DENY_TERMS contextual (negation patterns)"
+  
+  migration_guide: "docs/MIGRATION_v3.4_to_v3.5.md"
+
+# ============================================================================
+# EXTENSIBILIDAD
+# ============================================================================
+extensions:
+  custom_validators:
+    enabled: true
+    path: "swarm/schemas/custom_validators/"
+    
+  custom_vocabulary:
+    enabled: true
+    path: "swarm/schemas/custom_vocabulary.yaml"
+    merge_strategy: "override"  # custom overrides default
+    
+  plugin_hooks:
+    - "pre_validation"
+    - "post_validation"
+    - "sid_generation"
+    - "report_generation"

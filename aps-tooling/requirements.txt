@@ -1,0 +1,10 @@
+# APS Tooling Dependencies
+
+# Core dependencies
+PyYAML>=6.0
+
+# Schema validation
+jsonschema>=4.0.0
+
+# Optional: For better error messages
+colorama>=0.4.6

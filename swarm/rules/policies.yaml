@@ -1,0 +1,14 @@
+output_format: json
+
+handoff:
+  require_confirm: true
+
+globals_unique_sids:
+  - constraint:output:format:json-only
+  - constraint:handoff:confirm
+
+guards:
+  forbid_markdown_when_json: true
+  require_heuristic_ready_key: true
+
+json_lock: strict

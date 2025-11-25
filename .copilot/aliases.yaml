@@ -1,0 +1,24 @@
+aliases:
+  enrich_swarm_yaml_semantics:
+    description: "Enriquece un YAML de agente SWARM con atributos semánticos y SID en cada bloque."
+    prompt: |
+      Analiza el archivo YAML de definición de agente SWARM que te indico.
+      Para cada bloque dentro de la clave `blocks`:
+      1. Extrae los atributos semánticos principales:
+         - `accion`: el verbo principal que describe la acción del bloque.
+         - `relacion`: con quién o qué interactúa el bloque (usuario, sistema, agente, variable, etc.).
+         - `nivel`: el nivel de granularidad o fase (por ejemplo, inicialización, control, salida, guard, etc.).
+      2. Genera un campo `sid` único en el formato `<block_type>.<accion>.<relacion>.<nivel>`.
+      3. Añade los atributos extraídos (`accion`, `relacion`, `nivel`) como campos en cada bloque, junto al contenido original.
+      4. Devuelve el archivo YAML completo, enriquecido y manteniendo la estructura original.
+      Ejemplo de bloque enriquecido:
+      Entry Guard (no responder si no soy el activo):
+        block_type: BLK
+        accion: verificar
+        relacion: control.active_agent
+        nivel: guard
+        content: "...contenido original..."
+        sid: BLK.verificar.control.active_agent.guard
+      Instrucciones de uso:
+      Indica el path del archivo YAML que quieres procesar (por ejemplo, `swarm/agents/02-migration-motives.yaml`).
+      El modelo debe devolver el YAML enriquecido, listo para usar en el pipeline.
