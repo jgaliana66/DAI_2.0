@@ -60,12 +60,60 @@ Cuando trabajes con este repositorio, sigue estas reglas:
 - `yaml_lint_v6_semantic.py`: Validador contra APS v3.5 (FASE 4)
 - `sid_vocabulary_v1.yaml`: Vocabulario semántico para enriquecimiento (FASE 3)
 
+## Políticas de Entorno Python
+
+**CRÍTICO**: Cuando ejecutes código Python en este proyecto:
+
+1. **SIEMPRE usa `python3`**, NUNCA uses `python`
+   ```bash
+   # ✅ CORRECTO
+   python3 aps-tooling/scripts/md2yaml.py
+   
+   # ❌ INCORRECTO
+   python aps-tooling/scripts/md2yaml.py
+   ```
+
+2. **SIEMPRE usa un entorno virtual** antes de ejecutar scripts
+   ```bash
+   # Activar entorno virtual (si existe)
+   source venv/bin/activate
+   
+   # O crear uno nuevo si no existe
+   python3 -m venv venv
+   source venv/bin/activate
+   
+   # Luego ejecutar scripts
+   python3 aps-tooling/scripts/extract_goals_from_json.py
+   ```
+
+3. **Instalar dependencias en el entorno virtual**
+   ```bash
+   # Activar entorno virtual primero
+   source venv/bin/activate
+   
+   # Instalar dependencias
+   pip install -r aps-tooling/requirements.txt
+   ```
+
+**Razones**:
+- `python` puede apuntar a Python 2.x en algunos sistemas
+- Entornos virtuales evitan conflictos de dependencias
+- Aislamiento del sistema global de Python
+
 ## Convenciones de Código
 
 - Usa nombres descriptivos en español para archivos de agentes (ej: `01-J2Ci-Orchestrator.yaml`)
 - Los SIDs siguen el formato: `{block_type}.{accion}.{relacion}.{nivel}`
 - Todos los commits deben seguir Conventional Commits (feat, fix, chore, refactor, etc.)
 - Los reportes de validación usan formato Markdown con métricas agregadas
+
+## Políticas de Control de Versiones
+
+**IMPORTANTE**: 
+- ❌ **NUNCA hagas commit automáticamente**
+- ✅ **SIEMPRE pregunta antes** de hacer commit o push
+- ✅ Muestra un resumen de los cambios y espera confirmación del usuario
+- ✅ Solo procede con `git commit` y `git push` después de aprobación explícita
 
 ## Cómo Ejecutar el Pipeline
 
