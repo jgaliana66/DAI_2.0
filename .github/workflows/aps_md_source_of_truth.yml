@@ -1,0 +1,36 @@
+
+name: APS v3.5 — MD is Source of Truth
+
+on:
+  push:
+    paths:
+      - 'APS/**'
+      - 'aps-tooling/**'
+      - '.github/workflows/aps_md_source_of_truth.yml'
+  pull_request:
+    paths:
+      - 'APS/**'
+      - 'aps-tooling/**'
+      - '.github/workflows/aps_md_source_of_truth.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install pyyaml
+
+      - name: Validate APS YAML integrity
+        run: |
+          python3 aps-tooling/scripts/validate_aps_v35.py --dir APS
+
+      - name: Check YAML ⇄ MD synchronization (MD is source of truth)
+        run: |
+          python3 aps-tooling/scripts/check_yaml_sync.py --dir APS --repo-root .

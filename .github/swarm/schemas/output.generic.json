@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GenericOutput",
+  "type": "object",
+  "required": ["summary", "domains", "heuristic"],
+  "properties": {
+    "summary": { "type": "string", "minLength": 20 },
+    "domains": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+    "heuristic": {
+      "type": "object",
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ready": { "type": "boolean" }
+      },
+      "required": ["score", "ready"]
+    }
+  },
+  "additionalProperties": false
+}

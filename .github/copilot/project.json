@@ -1,0 +1,72 @@
+{
+  "project_name": "SWARM J2C",
+  "framework": "APS v4.0",
+  "methodology": "APS v3.5 (Agent Prompting Specification)",
+  "language": "YAML",
+  "context_path": "/swarm/agents",
+  "description": "Pipeline de 5 agentes especializados secuenciales para procesamiento de archivos SwarmBuilder JSON con enriquecimiento semántico y validación APS v3.5.",
+  "objectives": [
+    "Procesar SwarmBuilder JSON mediante pipeline de 5 fases especializadas",
+    "Extraer goals desde JSON → archivos Markdown",
+    "Convertir MD → YAML con placeholders mecánicamente",
+    "Enriquecer semánticamente YAMLs con 100% razonamiento LLM",
+    "Validar YAMLs contra reglas APS v3.5",
+    "Generar reportes consolidados de validación"
+  ],
+  "agents": [
+    {
+      "name": "01-json-extractor",
+      "file": ".github/agents/yaml-pipeline-v4/01-json-extractor.agent.md",
+      "description": "FASE 1: Extrae goals desde SwarmBuilder JSON y crea archivos .md individuales"
+    },
+    {
+      "name": "02-md2yaml-converter",
+      "file": ".github/agents/yaml-pipeline-v4/02-md2yaml-converter.agent.md",
+      "description": "FASE 2: Convierte archivos .md a .yaml con placeholders <<PENDING_AI>>"
+    },
+    {
+      "name": "03-semantic-enricher",
+      "file": ".github/agents/yaml-pipeline-v4/03-semantic-enricher.agent.md",
+      "description": "FASE 3: Enriquece YAMLs semánticamente usando 100% razonamiento LLM (sin código)"
+    },
+    {
+      "name": "04-yaml-validator",
+      "file": ".github/agents/yaml-pipeline-v4/04-yaml-validator.agent.md",
+      "description": "FASE 4: Valida YAMLs contra reglas APS v3.5 y genera reportes individuales"
+    },
+    {
+      "name": "05-report-generator",
+      "file": ".github/agents/yaml-pipeline-v4/05-report-generator.agent.md",
+      "description": "FASE 5: Consolida reportes individuales en reporte maestro"
+    }
+  ],
+  "orchestrator": {
+    "alias": "@yaml-pipeline",
+    "file": ".github/prompts/yaml-pipeline-v4/yaml-pipeline.prompt.md",
+    "description": "Orquesta la ejecución secuencial de las 5 fases en modo batch-by-phase"
+  },
+  "prompts": [
+    ".github/prompts/yaml-pipeline-v4/yaml-pipeline.prompt.md",
+    ".github/prompts/yaml-pipeline-v4/01-json-extractor.prompt.md",
+    ".github/prompts/yaml-pipeline-v4/02-md2yaml-converter.prompt.md",
+    ".github/prompts/yaml-pipeline-v4/03-semantic-enricher.prompt.md",
+    ".github/prompts/yaml-pipeline-v4/04-yaml-validator.prompt.md",
+    ".github/prompts/yaml-pipeline-v4/05-report-generator.prompt.md"
+  ],
+  "tooling": {
+    "md2yaml": "aps-tooling/scripts/md2yaml.py",
+    "validator": "aps-tooling/scripts/yaml_lint_v6_semantic.py",
+    "vocabulary": "aps-tooling/schemas/sid_vocabulary_v1.yaml"
+  },
+  "principles": [
+    "5 agentes especializados secuenciales (no subagentes)",
+    "Batch-by-phase: completar TODOS los archivos por fase antes de avanzar",
+    "FASE 3 es 100% LLM (razonamiento lingüístico, sin código)",
+    "Pipeline determinístico (mismo input → mismo output)",
+    "Detener pipeline inmediatamente si una fase falla"
+  ],
+  "maintainers": ["jgaliana66"],
+  "license": "Proprietary / Internal use only",
+  "version": "4.0.0",
+  "last_updated": "2025-11-21"
+}

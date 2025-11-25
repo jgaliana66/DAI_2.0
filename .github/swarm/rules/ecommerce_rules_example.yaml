@@ -1,0 +1,345 @@
+# ════════════════════════════════════════════════════════════════════════════
+# APS v3.5 - Reglas de Validación para SWARM E-commerce
+# ════════════════════════════════════════════════════════════════════════════
+
+version: "1.0"
+metadata:
+  description: "Reglas de validación semántica para SWARM de e-commerce"
+  domain: "ecommerce"
+  author: "E-commerce Team"
+  last_updated: "2025-11-19"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PATRONES SOSPECHOSOS ESPECÍFICOS DE E-COMMERCE
+# ═══════════════════════════════════════════════════════════════════════════
+
+suspicious_patterns:
+  # Validaciones de inventario
+  inventory_management:
+    no_stock_check:
+      - pattern: "crear.*pedido.*sin.*verificar.*stock"
+        severity: error
+        message: "Pedido creado sin validación de inventario disponible"
+      - pattern: "add_to_cart.*without.*stock.*check"
+        severity: error
+        message: "Producto añadido al carrito sin verificar disponibilidad"
+    
+    negative_quantity:
+      - pattern: "quantity\\s*<\\s*0"
+        severity: error
+        message: "Cantidad negativa detectada en inventario"
+      - pattern: "stock.*-\\d+"
+        severity: warning
+        message: "Posible stock negativo"
+  
+  # Validaciones de precios
+  pricing:
+    negative_price:
+      - pattern: "price\\s*<\\s*0"
+        severity: error
+        message: "Precio negativo detectado"
+      - pattern: "total.*-\\d+"
+        severity: error
+        message: "Total de pedido negativo"
+    
+    missing_tax:
+      - pattern: "calcular.*total.*sin.*impuestos"
+        severity: warning
+        message: "Cálculo de total sin incluir impuestos"
+      - pattern: "checkout.*without.*tax"
+        severity: warning
+        message: "Checkout sin aplicar impuestos"
+  
+  # Validaciones de carrito
+  cart_operations:
+    empty_cart_checkout:
+      - pattern: "checkout.*cart.*empty"
+        severity: error
+        message: "Intento de checkout con carrito vacío"
+      - pattern: "procesar.*pedido.*0.*items"
+        severity: error
+        message: "Procesando pedido sin items"
+    
+    abandoned_cart:
+      - pattern: "no.*guardar.*cart.*state"
+        severity: warning
+        message: "Carrito no persistido (se perderá al salir)"
+  
+  # Validaciones de pago
+  payment_processing:
+    no_validation:
+      - pattern: "procesar.*pago.*sin.*validar"
+        severity: error
+        message: "Procesamiento de pago sin validación previa"
+      - pattern: "charge.*card.*without.*verification"
+        severity: error
+        message: "Cargo a tarjeta sin verificación"
+    
+    no_fraud_check:
+      - pattern: "payment.*without.*fraud.*detection"
+        severity: warning
+        message: "Pago procesado sin detección de fraude"
+    
+    insecure_storage:
+      - pattern: "store.*card.*number.*plain"
+        severity: error
+        message: "Número de tarjeta almacenado sin encriptar"
+      - pattern: "save.*cvv"
+        severity: error
+        message: "CVV nunca debe almacenarse (violación PCI-DSS)"
+  
+  # Validaciones de envío
+  shipping:
+    no_address_validation:
+      - pattern: "enviar.*sin.*validar.*dirección"
+        severity: error
+        message: "Envío sin validar dirección de entrega"
+    
+    missing_tracking:
+      - pattern: "ship.*without.*tracking"
+        severity: warning
+        message: "Envío sin número de seguimiento"
+  
+  # Validaciones de descuentos y cupones
+  discounts:
+    no_expiry_check:
+      - pattern: "aplicar.*cupón.*sin.*verificar.*expiración"
+        severity: error
+        message: "Cupón aplicado sin verificar fecha de expiración"
+    
+    negative_discount:
+      - pattern: "descuento.*>.*100"
+        severity: error
+        message: "Descuento mayor al 100% (precio final negativo)"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KEYWORDS REQUERIDOS POR TIPO DE OPERACIÓN
+# ═══════════════════════════════════════════════════════════════════════════
+
+required_keywords:
+  inventory_block:
+    must_contain_any:
+      - "check_stock"
+      - "verify_availability"
+      - "validate_inventory"
+    message: "Bloque de inventario debe verificar disponibilidad"
+    severity: error
+
+  payment_block:
+    must_contain_any:
+      - "verify_payment"
+      - "validate_card"
+      - "process_transaction"
+      - "payment_gateway"
+    message: "Bloque de pago debe validar método de pago"
+    severity: error
+  
+  checkout_block:
+    must_contain_any:
+      - "validate_cart"
+      - "verify_address"
+      - "calculate_total"
+    message: "Checkout debe validar carrito y dirección"
+    severity: error
+  
+  shipping_block:
+    must_contain_any:
+      - "calculate_shipping"
+      - "verify_address"
+      - "select_carrier"
+    message: "Bloque de envío debe calcular costos y validar dirección"
+    severity: warning
+  
+  order_confirmation_block:
+    must_contain_any:
+      - "send_email"
+      - "generate_invoice"
+      - "update_inventory"
+    message: "Confirmación de pedido debe enviar email y actualizar inventario"
+    severity: warning
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PERMISOS POR ROL DE AGENTE (E-COMMERCE)
+# ═══════════════════════════════════════════════════════════════════════════
+
+role_permissions:
+  CUSTOMER_AGENT:
+    can_modify:
+      - "cart\\..*"
+      - "user\\.preferences"
+      - "wishlist\\..*"
+    cannot_modify:
+      - "price\\..*"
+      - "inventory\\.stock"
+      - "order\\.status"
+      - "payment\\.processed"
+    can_activate_agents: false
+    requires_entry_guard: true
+  
+  INVENTORY_AGENT:
+    can_modify:
+      - "inventory\\.stock"
+      - "inventory\\.reserved"
+      - "product\\.availability"
+    cannot_modify:
+      - "price\\..*"
+      - "order\\.total"
+      - "payment\\..*"
+    can_activate_agents: false
+    requires_entry_guard: true
+  
+  PRICING_AGENT:
+    can_modify:
+      - "price\\.base"
+      - "price\\.discount"
+      - "price\\.tax"
+    cannot_modify:
+      - "inventory\\..*"
+      - "payment\\.processed"
+      - "order\\.shipped"
+    can_activate_agents: false
+    requires_entry_guard: true
+  
+  PAYMENT_AGENT:
+    can_modify:
+      - "payment\\.status"
+      - "payment\\.transaction_id"
+      - "order\\.payment_confirmed"
+    cannot_modify:
+      - "inventory\\..*"
+      - "price\\.base"
+      - "cart\\..*"
+    can_activate_agents: false
+    requires_entry_guard: true
+  
+  ORDER_ORCHESTRATOR:
+    can_modify:
+      - "order\\..*"
+      - "control\\.active_agent"
+      - "workflow\\.phase"
+    can_activate_agents: true
+    requires_entry_guard: false
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VALIDACIONES ESTRUCTURALES (BLOQUES MANDATORIOS)
+# ═══════════════════════════════════════════════════════════════════════════
+
+structural_requirements:
+  mandatory_blocks:
+    - name: "Entry Guard"
+      aliases:
+        - "Entry Guard"
+        - "Activation Condition"
+        - "Guardia de Entrada"
+      applies_to_roles: ["CUSTOMER_AGENT", "INVENTORY_AGENT", "PRICING_AGENT", "PAYMENT_AGENT"]
+      severity: error
+    
+    - name: "Exit Strategy"
+      aliases:
+        - "Exit Strategy"
+        - "Completion Handler"
+        - "Estrategia de Salida"
+      applies_to_roles: ["CUSTOMER_AGENT", "INVENTORY_AGENT", "PRICING_AGENT", "PAYMENT_AGENT", "ORDER_ORCHESTRATOR"]
+      severity: error
+    
+    - name: "State JSON"
+      aliases:
+        - "State JSON"
+        - "Order State"
+        - "Estado del Pedido"
+      applies_to_roles: ["CUSTOMER_AGENT", "INVENTORY_AGENT", "PRICING_AGENT", "PAYMENT_AGENT", "ORDER_ORCHESTRATOR"]
+      severity: error
+    
+    - name: "Error Handling"
+      aliases:
+        - "Error Handling"
+        - "Exception Handler"
+        - "Manejo de Errores"
+      applies_to_roles: ["PAYMENT_AGENT", "ORDER_ORCHESTRATOR"]
+      severity: warning
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VALIDACIONES SEMÁNTICAS AVANZADAS
+# ═══════════════════════════════════════════════════════════════════════════
+
+semantic_validators:
+  duplicate_detection:
+    enabled: true
+    similarity_threshold: 0.75  # 75% similitud = duplicado
+    ignore_short_blocks: 30
+    severity: warning
+  
+  state_json_schema:
+    enabled: true
+    required_top_level_keys:
+      - "order"
+      - "customer"
+      - "cart"
+      - "payment"
+      - "shipping"
+    forbidden_keys:
+      - "credit_card_number"
+      - "cvv"
+      - "password"
+      - "internal_price"
+    severity: error
+
+# ═══════════════════════════════════════════════════════════════════════════
+# REGLAS CUSTOM ESPECÍFICAS DE E-COMMERCE
+# ═══════════════════════════════════════════════════════════════════════════
+
+custom_rules:
+  ecommerce_specific:
+    enabled: true
+    
+    rules:
+      pci_compliance:
+        patterns:
+          - pattern: "store.*credit.*card"
+            severity: error
+            message: "Violación PCI-DSS: no almacenar datos de tarjeta"
+          - pattern: "log.*card.*number"
+            severity: error
+            message: "Violación PCI-DSS: no registrar números de tarjeta en logs"
+      
+      gdpr_compliance:
+        patterns:
+          - pattern: "store.*without.*consent"
+            severity: error
+            message: "Violación GDPR: datos almacenados sin consentimiento"
+          - pattern: "share.*email.*third.*party.*without.*consent"
+            severity: error
+            message: "Violación GDPR: compartir datos sin consentimiento"
+      
+      order_workflow:
+        patterns:
+          - pattern: "ship.*before.*payment.*confirmed"
+            severity: error
+            message: "Orden de workflow incorrecta: envío antes de confirmar pago"
+          - pattern: "payment.*before.*inventory.*reserved"
+            severity: warning
+            message: "Recomendación: reservar inventario antes de procesar pago"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CONFIGURACIÓN DE REPORTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+reporting:
+  severity_levels:
+    error:
+      exit_code: 1
+      symbol: "❌"
+      color: "red"
+    
+    warning:
+      exit_code: 0
+      symbol: "⚠️"
+      color: "yellow"
+    
+    info:
+      exit_code: 0
+      symbol: "ℹ️"
+      color: "blue"
+  
+  output_format: "detailed"
+  group_by: "severity"

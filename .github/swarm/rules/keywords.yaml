@@ -1,0 +1,22 @@
+sid_map:
+  constraint:output:format:json-only:
+    - "solo json"
+    - "json únicamente"
+    - "no markdown"
+  constraint:output:state_json:visibility:
+    - "mostrar"
+    - "ocultar"
+    - "enmascarar"
+  constraint:handoff:confirm:
+    - "confirmar handoff"
+    - "validar transferencia"
+
+verbs:
+  show: [imprime, muestra, volcar, print, show]
+  hide: [oculta, no muestres, esconde, hide]
+  mask: [enmascara, redáctalo, mask]
+
+conditions:
+  always: [siempre, por defecto]
+  debug_only: [modo debug]
+  on_error: [si hay error]
